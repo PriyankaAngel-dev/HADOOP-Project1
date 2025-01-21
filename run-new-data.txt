@@ -1,0 +1,124 @@
+
+new bash script ......................................................
+insert new, updated data in employee_new
+
+
+mysql> select * from employee_new
+    -> ;
++----+-----------+--------+------+
+| id | name      | gender | sal  |
++----+-----------+--------+------+
+|  2 | Astha_new | F      | 8800 |
+|  7 | Rahul     | M      | 9000 |
+|  8 | Shivam    | M      | 4500 |
++----+-----------+--------+------+
+3 rows in set (0.00 sec)
+
+mysql> drop table employee_new;
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> show tables;
++------------------+
+| Tables_in_batch1 |
++------------------+
+| basetable        |
+| employee_old     |
++------------------+
+2 rows in set (0.02 sec)
+
+mysql> create TABLE employee_new(
+    ->   id INTEGER PRIMARY KEY,
+    ->   name varchar(30),
+    ->   gender varchar(30),
+    ->   sal int);
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> INSERT INTO employee_new VALUES (1, 'Neha', 'F', 7600);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO employee_new VALUES (4, 'Priyanka', 'F', 8600);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO employee_new VALUES (7, 'Kiran', 'M', 12000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO employee_new VALUES (9, 'Omkar', 'M', 5500);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO employee_new VALUES (10, 'Komal', 'F', 3500);
+Query OK, 1 row affected (0.00 sec)
+
+
+mysql> select * from employee_new;
++----+----------+--------+-------+
+| id | name     | gender | sal   |
++----+----------+--------+-------+
+|  1 | Neha     | F      |  7600 |
+|  4 | Priyanka | F      |  8600 |
+|  7 | Kiran    | M      | 12000 |
+|  9 | Omkar    | M      |  5500 |
+| 10 | Komal    | F      |  3500 |
++----+----------+--------+-------+
+5 rows in set (0.00 sec)
+
+now run driving_script.sh
+******************************************************
+
+hive> select * from emp;
+OK
+1	Neha	F	7600
+2	Astha_new	F	8800
+3	Shivam	M	4500
+4	Priyanka	F	8600
+7	Kiran	M	12000
+8	Shivam	M	4500
+9	Omkar	M	5500
+10	Komal	F	3500
+Time taken: 0.285 seconds, Fetched: 8 row(s)
+
+
+hbase(main):005:0> scan "empTab"
+ROW                         COLUMN+CELL                                                                 
+ 1                          column=emp_info:egen, timestamp=1677407979977, value=F                      
+ 1                          column=emp_info:ename, timestamp=1677407979977, value=Neha                  
+ 1                          column=emp_info:esal, timestamp=1677407979977, value=7600                   
+ 10                         column=emp_info:egen, timestamp=1677407979977, value=F                      
+ 10                         column=emp_info:ename, timestamp=1677407979977, value=Komal                 
+ 10                         column=emp_info:esal, timestamp=1677407979977, value=3500                   
+ 2                          column=emp_info:egen, timestamp=1677407979977, value=F                      
+ 2                          column=emp_info:ename, timestamp=1677407979977, value=Astha_new             
+ 2                          column=emp_info:esal, timestamp=1677407979977, value=8800                   
+ 3                          column=emp_info:egen, timestamp=1677407979977, value=M                      
+ 3                          column=emp_info:ename, timestamp=1677407979977, value=Shivam                
+ 3                          column=emp_info:esal, timestamp=1677407979977, value=4500                   
+ 4                          column=emp_info:egen, timestamp=1677407979977, value=F                      
+ 4                          column=emp_info:ename, timestamp=1677407979977, value=Priyanka              
+ 4                          column=emp_info:esal, timestamp=1677407979977, value=8600                   
+ 7                          column=emp_info:egen, timestamp=1677407979977, value=M                      
+ 7                          column=emp_info:ename, timestamp=1677407979977, value=Kiran                 
+ 7                          column=emp_info:esal, timestamp=1677407979977, value=12000                  
+ 8                          column=emp_info:egen, timestamp=1677407979977, value=M                      
+ 8                          column=emp_info:ename, timestamp=1677407979977, value=Shivam                
+ 8                          column=emp_info:esal, timestamp=1677407979977, value=4500                   
+ 9                          column=emp_info:egen, timestamp=1677407979977, value=M                      
+ 9                          column=emp_info:ename, timestamp=1677407979977, value=Omkar                 
+ 9                          column=emp_info:esal, timestamp=1677407979977, value=5500                   
+8 row(s) in 0.3290 seconds
+
+
+
+
+project done successfully******************************************
+
+
+
+
+
+
+
+
+
+
+
+
+

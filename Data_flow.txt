@@ -1,0 +1,7 @@
+Data Flow Summary.............
+
+1) MySQL contains structured data (e.g., transactional data).
+2) Sqoop is used to import data from MySQL to HDFS.
+3) The data is stored in HDFS for scalable storage.
+4) Hive provides an SQL interface to query and process the data stored in HDFS.
+5) HBase can be used for storing processed data for real-time querying.

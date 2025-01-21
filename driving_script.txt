@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo ".......Starting Script................."
+
+#Main table
+#sqoop import --connect jdbc:mysql://localhost:3306/batch1 --username root --password root --table employee_old --target-dir /EmpTable --fields-terminated-by ','
+#LOAD DATA INPATH '/EmpTable/part-m*' INTO TABLE emp;
+
+
+echo "--------import new table---------------"
+sqoop import --connect jdbc:mysql://localhost:3306/batch1 --username root --password root --table employee_new --delete-target-dir --target-dir /EmploadDir --fields-terminated-by ','
+
+echo "===========Table operations =========="
+
+hive -f load_table.hql
+
+
+echo "======inserting table into HBASE ======"
+
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator=, -Dimporttsv.columns=HBASE_ROW_KEY,emp_info:ename,emp_info:egen,emp_info:esal empTab hdfs://localhost:8020//user/hive/warehouse/emp/*;
+
+

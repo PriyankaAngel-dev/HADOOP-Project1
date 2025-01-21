@@ -1,0 +1,10 @@
+
+gopalkrishna@ubuntu:~$ cat load_table.hql
+gopalkrishna@ubuntu:~$ chmod +x load_table.hql
+
+gopalkrishna@ubuntu:~$ cat driving_script.sh
+gopalkrishna@ubuntu:~$ chmod +x driving_script.sh
+
+RUN driving_script.sh...................
+
+gopalkrishna@ubuntu:~$ bash driving_script.sh

@@ -1,0 +1,214 @@
+Sir-Project1-Assignment
+-------------------------------------------------------------------------------------
+1. create 2 mysql table in batch1- employee_old and employee_new.******************************
+
+mysql> CREATE TABLE employee_old(
+    ->   id INTEGER PRIMARY KEY,
+    ->   name varchar(30),
+    ->   gender varchar(30),
+    ->   sal int);
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> INSERT INTO employee_old VALUES (1, 'Astha', 'F', 8800);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO employee_old VALUES (2, 'Rahul', 'M', 9000);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO employee_old VALUES (3, 'Shivam', 'M', 4500);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from employee_old
+    -> ;
++----+--------+--------+------+
+| id | name   | gender | sal  |
++----+--------+--------+------+
+|  1 | Astha  | F      | 8800 |
+|  2 | Rahul  | M      | 9000 |
+|  3 | Shivam | M      | 4500 |
++----+--------+--------+------+
+3 rows in set (0.01 sec)
+
+mysql> create TABLE employee_new(
+    ->   id INTEGER PRIMARY KEY,
+    ->   name varchar(30),
+    ->   gender varchar(30),
+    ->   sal int);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> INSERT INTO employee_new VALUES (2, 'Astha_new', 'F', 8800);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO employee_new VALUES (7, 'Rahul', 'M', 9000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO employee_new VALUES (8, 'Shivam', 'M', 4500);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from employee_new
+    -> ;
++----+-----------+--------+------+
+| id | name      | gender | sal  |
++----+-----------+--------+------+
+|  2 | Astha_new | F      | 8800 |
+|  7 | Rahul     | M      | 9000 |
+|  8 | Shivam    | M      | 4500 |
++----+-----------+--------+------+
+3 rows in set (0.01 sec)
+
+2. transfer employee_old and employee_new data in hdfs-- *********************************
+
+for employee_old.......................
+gopalkrishna@ubuntu:~$ sqoop import --connect jdbc:mysql://localhost:3306/batch1 --username root --password root --table employee_old --target-dir /EmpTable --fields-terminated-by ','
+
+for employee_new.........................
+gopalkrishna@ubuntu:~$ sqoop import --connect jdbc:mysql://localhost:3306/batch1 --username root --password root --table employee_new --delete-target-dir --target-dir /EmploadDir --fields-terminated-by ','
+
+3. create 2 hive table and load data - ***********************************
+
+for old data......
+hive> create external table emp (eno int,ename string,egen string,esal int)
+    > row format delimited
+    > fields terminated by ','
+    > lines terminated by '\n'
+    > stored as textfile;
+OK
+Time taken: 2.139 seconds
+ 
+for new data......
+hive> DROP TABLE IF EXISTS emp_new;
+OK
+Time taken: 1.377 seconds
+hive> create external table IF NOT EXISTS emp_new(eno int,ename string,egen string,esal int)
+    > row format delimited
+    > fields terminated by ','
+    > lines terminated by '\n'
+    > stored as textfile;
+OK
+Time taken: 0.621 seconds
+
+load data into hive table............
+
+hive>  LOAD DATA INPATH '/EmpTable/part-m*' INTO TABLE emp;
+hive>  LOAD DATA INPATH '/EmploadDir/part-m*' overwrite INTO TABLE emp_new;
+
+hive> select * from emp;
+OK
+1	Astha	F	8800
+2	Rahul	M	9000
+3	Shivam	M	4500
+Time taken: 0.881 seconds, Fetched: 3 row(s)
+
+hive> select * from emp_new;
+OK
+2	Astha_new	F	8800
+7	Rahul	M	9000
+8	Shivam	M	4500
+Time taken: 0.11 seconds, Fetched: 3 row(s)
+
+4. create temporary tables to store new, updated and old data from emp and emp_new tables using join methods.......
+and finaly union 3 tempory tables-(new,updated,old) and store this data again in emp table using "overwrite"..............********************************************
+
+
+SELECTING THE NEW DATA FROM TABLE .................
+
+hive> DROP TABLE IF EXISTS emp_new_records;
+
+hive> create TEMPORARY table emp_new_records as select emp_new.* from emp RIGHT JOIN emp_new on emp.eno = emp_new.eno where emp.eno is null;
+
+hive> select * from emp_new_records;
+OK
+7	Rahul	M	9000
+8	Shivam	M	4500
+Time taken: 0.098 seconds, Fetched: 2 row(s)
+
+
+SELECTING THE UPDATED DATA FROM TABLE .......................
+
+hive> DROP TABLE IF EXISTS emp_updated;
+
+hive> create TEMPORARY table emp_updated as select emp_new.* from emp join emp_new on emp.eno = emp_new.eno;
+
+hive> select * from emp_updated;
+OK
+2	Astha_new	F	8800
+Time taken: 0.144 seconds, Fetched: 1 row(s)
+
+
+SELECTING THE OLD DATA FROM TABLE ....................
+
+hive> DROP TABLE IF EXISTS emp_older;
+
+hive> create TEMPORARY table emp_older as select emp.* from emp LEFT JOIN emp_new on emp.eno = emp_new.eno where emp_new.eno is null;
+
+hive> select * from emp_older;
+OK
+1	Astha	F	8800
+3	Shivam	M	4500
+Time taken: 0.111 seconds, Fetched: 2 row(s)
+
+FINAL RECORDS.....................
+
+finaly union 3 tempory tables-(new,updated,old) and store this data again in emp table using "overwrite"...................
+
+hive> insert overwrite table emp select * from emp_updated UNION select * from emp_new_records UNION select * from emp_older;
+
+hive> select * from emp;
+OK
+1	Astha	F	8800
+2	Astha_new	F	8800
+3	Shivam	M	4500
+7	Rahul	M	9000
+8	Shivam	M	4500
+Time taken: 0.103 seconds, Fetched: 5 row(s)
+
+5. load final table emp into hbase.........***********************************************
+
+hbase(main):001:0> create "empTab", "emp_info",{ NAME => "emp_info", VERSIONS => 4 } 
+
+hbase(main):002:0> describe "empTab"
+Table empTab is ENABLED                                                                       
+empTab                                                                                        
+COLUMN FAMILIES DESCRIPTION                                                                   
+{NAME => 'emp_info', DATA_BLOCK_ENCODING => 'NONE', BLOOMFILTER => 'ROW', REPLICATION_SCOPE =>
+ '0', VERSIONS => '4', COMPRESSION => 'NONE', MIN_VERSIONS => '0', TTL => 'FOREVER', KEEP_DELE
+TED_CELLS => 'FALSE', BLOCKSIZE => '65536', IN_MEMORY => 'false', BLOCKCACHE => 'true'}       
+1 row(s) in 0.1860 seconds
+
+gopalkrishna@ubuntu:~$ hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator=, -Dimporttsv.columns=HBASE_ROW_KEY,emp_info:ename,emp_info:egen,emp_info:esal empTab hdfs://localhost:8020//user/hive/warehouse/emp/*;
+
+hbase(main):003:0> scan "empTab"
+ROW                        COLUMN+CELL                                                                 
+ 1                         column=emp_info:egen, timestamp=1677398929811, value=F                      
+ 1                         column=emp_info:ename, timestamp=1677398929811, value=Astha                 
+ 1                         column=emp_info:esal, timestamp=1677398929811, value=8800                   
+ 2                         column=emp_info:egen, timestamp=1677398929811, value=F                      
+ 2                         column=emp_info:ename, timestamp=1677398929811, value=Astha_new             
+ 2                         column=emp_info:esal, timestamp=1677398929811, value=8800                   
+ 3                         column=emp_info:egen, timestamp=1677398929811, value=M                      
+ 3                         column=emp_info:ename, timestamp=1677398929811, value=Shivam                
+ 3                         column=emp_info:esal, timestamp=1677398929811, value=4500                   
+ 7                         column=emp_info:egen, timestamp=1677398929811, value=M                      
+ 7                         column=emp_info:ename, timestamp=1677398929811, value=Rahul                 
+ 7                         column=emp_info:esal, timestamp=1677398929811, value=9000                   
+ 8                         column=emp_info:egen, timestamp=1677398929811, value=M                      
+ 8                         column=emp_info:ename, timestamp=1677398929811, value=Shivam                
+ 8                         column=emp_info:esal, timestamp=1677398929811, value=4500                   
+5 row(s) in 0.1600 seconds
+
+END PROJECT ***********************************************************************************************
+
+CREATE SHELL SCRIPT........................
+
+gopalkrishna@ubuntu:~$ cat load_table.hql
+gopalkrishna@ubuntu:~$ chmod +x load_table.hql
+
+gopalkrishna@ubuntu:~$ cat driving_script.sh
+gopalkrishna@ubuntu:~$ chmod +x driving_script.sh
+
+RUN driving_script.sh...................
+
+gopalkrishna@ubuntu:~$ bash driving_script.sh
+  
+
+FINAL PROJECT1 DONE ********************************************************************************************************************************
