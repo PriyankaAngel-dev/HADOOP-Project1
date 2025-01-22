@@ -1,5 +1,5 @@
 # HADOOP-Project1
-## Assignment
+## ETL Data Pipeline Project | MySQL to HBase via Hive
 
 1) Read Table as it is from MYSQL & Create HIVE Table on top of it.
 2) Do some Updates & Add New Records in MYSQL Table and Create HIVE Table on top of it.
